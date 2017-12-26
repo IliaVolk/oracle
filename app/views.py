@@ -27,7 +27,9 @@ def auth_begin(request):
         scopes=['email']
     )
     flow.redirect_uri = 'http://cursdb.com:8000/redirect'
-    authorization_url, state = flow.authorization_url()
+    authorization_url, state = flow.authorization_url(
+        access_type='online',
+    )
     return redirect(authorization_url)
 
 
