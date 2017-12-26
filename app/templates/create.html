@@ -1,0 +1,146 @@
+{% extends "header.html" %}
+{% load static %}
+{% block content %}
+    <div style="max-width: 400px; margin: 0 auto;">
+        <h1>Create meeting</h1>
+        <form id="form" action="/{{ action }}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="exampleInputEmail1">Title</label>
+                <input type="text"
+                       value="{{ meeting.title }}"
+                       required
+                       pattern="[a-zA-Z]{3,254}"
+                       oninvalid="this.setCustomValidity('Only english letters allowed, min 3 max 254')"
+                       oninput="setCustomValidity('')"
+                       name="title"
+                       class="form-control"
+                       id="title"
+                       aria-describedby="emailHelp"
+                       placeholder="Enter title">
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.
+                </small>
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text"
+                       required
+                       pattern="[a-zA-Z]{3,254}"
+                       oninvalid="this.setCustomValidity('Only english letters allowed, min 3 max 254')"
+                       oninput="setCustomValidity('')"
+                       value="{{ meeting.address }}"
+                       name="address"
+                       class="form-control"
+                       id="address"
+                       placeholder="Enter address">
+            </div>
+            <div class="form-group">
+                <label for="date">
+                    Date of beginning
+                </label>
+                <div class="input-group date">
+                    <input type="text"
+                           value="{{ meeting.date }}"
+                           name="date"
+                           required id="date" class="form-control"><span class="input-group-addon"><i
+                           class="glyphicon glyphicon-th"></i></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="description">
+                    Description
+                </label>
+                <input id="description"
+                       class="form-control"
+                       pattern="[a-zA-Z]{3,254}"
+                       oninvalid="this.setCustomValidity('Only english letters allowed, min 3 max 254')"
+                       oninput="setCustomValidity('')"
+                       placeholder="Description"
+                       value="{{ meeting.desc }}"
+                       name="description">
+            </div>
+            <div class="form-group">
+                <label for="invited">
+                    Invited people
+                </label>
+                <input type="hidden"
+                       id="invited-value"
+                       name="invited">
+                <input id="invited"
+                       class="form-control"
+                       autocomplete="off">
+                <div id="invited-result">
+
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="reset" class="btn">Reset</button>
+        </form>
+    </div>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/css/bootstrap-datepicker.min.css"
+          rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js"></script>
+    <script src="{% static "type.js" %}"></script>
+    <script>
+        $().ready(() => {
+            const userEmail = '{{ request.COOKIES.useremail }}';
+            $('.input-group.date').datepicker({
+                autoclose: true,
+                startDate: "now",
+                placeholder: 'Date'
+            });
+            const invited = [];
+            $('#form').on('submit', () => {
+                $('#invited-value').val(invited.join(','));
+                return true;
+            });
+            const addInvited = val => {
+                const add = !invited.includes(val) && val !== userEmail;
+                if (add) {
+                    invited.push(val);
+                    const el = $(`
+                        <div title="click to remove"
+                             class="email-item">${val}</div>
+                        `);
+                    el.click(e => {
+                        invited.splice(invited.indexOf(val), 1);
+                        $(e.target).remove();
+                    });
+                    $('#invited-result').append(el);
+                }
+            }
+            const defaultInvited = [
+                {% for inv in meeting.invited %}
+                    '{{ inv.user.email }}',
+                {% endfor %}
+            ];
+            defaultInvited.forEach(addInvited);
+            var $input = $("#invited");
+            $input.keydown(e => {
+                var code = (e.keyCode ? e.keyCode : e.which);
+                if (code === 13) { //Enter keycode
+                    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                    const value = $input.val();
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!re.test(value)) {
+                        alert('email is not valid');
+                        return;
+                    }
+                    addInvited(value);
+                    $input.val('');
+
+                }
+            })
+            ;
+            $input.typeahead({
+                source: [
+                    {% for user in autocomplete %}
+                        '{{user.email}}',
+                    {% endfor %}
+                ],
+            });
+        })
+    </script>
+{% endblock %}

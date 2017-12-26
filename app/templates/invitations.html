@@ -1,0 +1,18 @@
+{% extends "header.html" %}
+{% block content %}
+    <div style="width: 600px; margin: 0 auto">
+        <h1>Invitation list</h1>
+        {% for meeting in meetings %}
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">{{ meeting.title }}</h4>
+                    <h6 class="card-subtitle mb-2 text-muted">At {{ meeting.address }}, {{ meeting.date }}</h6>
+                    <p class="card-text">{{ meeting.desc }}</p>
+                    <p>Owner: {{ meeting.user.email }} {{ meeting.user.name }}</p>
+                    <a href="/edit/{{ meeting.id }}/accept" class="card-link">Accept</a>
+                    <a href="/edit/{{ meeting.id }}/discard" class="card-link">Discard</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

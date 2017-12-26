@@ -1,0 +1,42 @@
+{% extends "header.html" %}
+{% block content %}
+    <div style="width: 600px; margin: 0 auto">
+        <h1>Meetings list</h1>
+        {% for meeting in meetings %}
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">{{ meeting.title }}</h4>
+                    <h6 class="card-subtitle mb-2 text-muted">At {{ meeting.address }}, {{ meeting.date }}</h6>
+                    <p class="card-text">{{ meeting.desc }}</p>
+                    {% if request.COOKIES.useremail == meeting.user.email %}
+                        <a href="/edit/{{ meeting.id }}" class="card-link">Edit</a>
+                    {% endif %}
+                    {% if request.COOKIES.useremail != meeting.user.email %}
+                        <a href="/edit/{{ meeting.id }}/discard" class="card-link">Discard</a>
+                    {% endif %}
+                    <p>Invited:</p>
+                    <table>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                        </tr>
+                        {% for inv in meeting.invited %}
+                            <tr>
+                                <td>
+                                    {{ inv.user.email }}
+                                </td>
+                                <td>
+                                    {{ inv.user.name }}
+                                </td>
+                                <td>
+                                    {{ inv.status }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

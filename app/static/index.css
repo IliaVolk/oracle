@@ -1,0 +1,13 @@
+.card * {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.email-item:hover {
+    cursor: pointer;
+    background-color: lightgray;
+}
+
+.hello {
+    display: flex;
+    align-items: center;
+}
