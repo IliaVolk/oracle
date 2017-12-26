@@ -5,3 +5,4 @@ username = 'ilya'
 password = 'aqdqmqiqnq'
 ip = '192.168.0.105'
 port = 1521
+proto = 'orcl'

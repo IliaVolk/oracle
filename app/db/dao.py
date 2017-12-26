@@ -1,5 +1,5 @@
 import cx_Oracle
-from app.config import username, password, ip, port
+from app.config import username, password, ip, port, proto
 
 
 class Dao:
@@ -8,9 +8,10 @@ class Dao:
         self.conn = cx_Oracle.connect(
             username,
             password,
-            '{}:{}/orcl'.format(
+            '{}:{}/{}'.format(
                 ip,
                 port,
+                proto,
             ))
         self.conn.begin()
         self.cursor = self.conn.cursor()

@@ -1,6 +1,6 @@
 import pytest
 
-from app.config import username, password, ip, port
+from app.config import username, password, ip, port, proto
 import cx_Oracle
 from app.db.model import User
 
@@ -17,9 +17,10 @@ def connection():
     with cx_Oracle.connect(
             username,
             password,
-            '{}:{}/orcl'.format(
+            '{}:{}/{}'.format(
                 ip,
                 port,
+                proto,
             )) as conn:
         yield conn
 
