@@ -11,6 +11,26 @@ def chop_microseconds(delta):
     return delta - datetime.timedelta(microseconds=delta.microsecond)
 
 
+def test_meeting_delete(user):
+    meetings = [Meeting(
+        user,
+        'title{}'.format(i),
+        'address{}'.format(i),
+        chop_microseconds(datetime.datetime.now() + datetime.timedelta(3)),
+        [],
+        'desc{}'.format(i),
+    ) for i in range(2)]
+    with MeetingDao() as dao:
+        for m in meetings:
+            dao.create(m)
+        created = dao.get(user)
+        assert len(created) == 2
+        dao.delete(created[0].id)
+        after_delete = dao.get(user)
+        assert len(after_delete) == 1
+        assert after_delete[0].id == created[1].id
+
+
 def test_accept_discard_invitation(user):
     inv1 = Invitation(user=User(email='qqq@qqq.qqq'))
     inv2 = Invitation(user=User(email='www@www.www'))

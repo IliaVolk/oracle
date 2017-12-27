@@ -32,10 +32,11 @@ class MeetingDao(Dao):
                 ))
         return meetings
 
-    def get(self, user: User, limit=10, offset=0):
+    def get(self, user: User):
         self.cursor.execute(
-            'select * from TABLE(ilya_package.get_meetings_list(:email, NULL))',
-            [user.email])
+            'select * from TABLE(ilya_package.get_meetings_list(:email, NULL))', {
+                'email': user.email,
+            })
         data = self.cursor.fetchall()
 
         return self.collect_data(data)
@@ -78,4 +79,9 @@ class MeetingDao(Dao):
             [inv.user.email for inv in meeting.invited],
             meeting.desc,
         ])
+
+    def delete(self, id):
+        self.cursor.callproc('ilya_package.delete_meeting', [id])
+
+
 

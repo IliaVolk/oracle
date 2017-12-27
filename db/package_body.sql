@@ -308,4 +308,20 @@ CREATE OR REPLACE PACKAGE BODY ilya_package AS
          WHERE "id" = id AND "email" = email;
          COMMIT;
       END discard_invitation;
+   PROCEDURE delete_meeting(
+      id "Meeting"."id"%TYPE
+   ) IS
+      empty_list STRING_LIST;
+      BEGIN
+         COMMIT;
+         SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+         invite_users(id, empty_list);
+         DELETE FROM "Meeting"
+            WHERE "id" = id;
+         COMMIT;
+      EXCEPTION
+         WHEN OTHERS THEN
+            ROLLBACK;
+
+      END delete_meeting;
 END ilya_package;

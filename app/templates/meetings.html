@@ -9,7 +9,10 @@
                     <h6 class="card-subtitle mb-2 text-muted">At {{ meeting.address }}, {{ meeting.date }}</h6>
                     <p class="card-text">{{ meeting.desc }}</p>
                     {% if request.COOKIES.useremail == meeting.user.email %}
-                        <a href="/edit/{{ meeting.id }}" class="card-link">Edit</a>
+                        <a href="/edit/{{ meeting.id }}"
+                           class="card-link">Edit</a>
+                        <a href="/edit/{{ meeting.id }}/delete"
+                           class="card-link">Delete</a>
                     {% endif %}
                     {% if request.COOKIES.useremail != meeting.user.email %}
                         <a href="/edit/{{ meeting.id }}/discard" class="card-link">Discard</a>

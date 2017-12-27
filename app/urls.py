@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^update/(?P<id>\d+)/', views.update),
     url(r'^edit/(?P<id>\d+)/accept$', views.accept),
     url(r'^edit/(?P<id>\d+)/discard$', views.discard),
+    url(r'^edit/(?P<id>\d+)/delete$', views.delete_meeting),
     url(r'^access_denied$', views.access_denied)
 ]
 

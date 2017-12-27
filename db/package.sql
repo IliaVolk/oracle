@@ -72,4 +72,7 @@ CREATE OR REPLACE PACKAGE ilya_package AS
       id "Invitation"."id"%TYPE,
       email "Invitation"."email"%TYPE
    );
+   PROCEDURE delete_meeting(
+      id "Meeting"."id"%TYPE
+   );
 END ilya_package;

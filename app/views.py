@@ -6,11 +6,30 @@ from app.db.user_dao import UserDao
 import google_auth_oauthlib.flow
 import os
 import hashlib
-
+from cx_Oracle import DatabaseError
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 dir_path = os.path.dirname(os.path.realpath(__file__))
 client_json_path = os.path.join(dir_path, 'client_secret.json')
+
+meeting_action_update = 'update'
+meeting_action_create = 'create'
+
+
+def _edit_meeting_page(request, meeting: Meeting, action, error=None):
+    assert action in (meeting_action_update, meeting_action_create)
+    if meeting.date:
+        meeting.date = meeting.date.strftime('%m/%d/%Y')
+    with UserDao() as dao:
+        autocomplete = dao.get_autocomplete(User(email=request.COOKIES.get('useremail')))
+    action = action if action == meeting_action_create else \
+        'update/{}/'.format(id) if action == meeting_action_update else None
+    return render(request, 'create.html', {
+        'meeting': meeting,
+        'action': action,
+        'autocomplete': autocomplete,
+        'error': error if error is not None else '',
+    })
 
 
 def index(request):
@@ -57,15 +76,14 @@ def auth_redirect(request):
 
 def create_meeting(request):
     if request.method == 'GET':
-        with UserDao() as dao:
-            autocomplete = dao.get_autocomplete(User(email=request.COOKIES.get('useremail')))
-        return render(request, 'create.html', {
-            'meeting': Meeting(
+        return _edit_meeting_page(
+            request,
+            Meeting(
                 '', '', '', '', [], '', '',
             ),
-            'action': 'create',
-            'autocomplete': autocomplete
-        })
+            meeting_action_create,
+        )
+
     elif request.method == 'POST':
         emails = {x for x in request.POST['invited'].split(',') if x}
         meeting = Meeting(
@@ -77,7 +95,17 @@ def create_meeting(request):
             request.POST['description'],
         )
         with MeetingDao() as dao:
-            dao.create(meeting)
+            try:
+                dao.create(meeting)
+            except DatabaseError as e:
+                error = None
+                if 'MEETING_UNIQUENESS' in str(e):
+                    error = 'Such meeting already exists'
+
+                return _edit_meeting_page(
+                    request, meeting, meeting_action_create,
+                    error=error,
+                )
 
         return render(request, 'created.html', {
             'meeting': meeting,
@@ -106,15 +134,11 @@ def edit(request, id):
             meeting = dao.get_single(id)
             if meeting is None or meeting.user.email != request.COOKIES.get('useremail'):
                 return redirect('/access_denied')
-            meeting.date = meeting.date.strftime('%m/%d/%Y')
-        with UserDao() as dao:
-            autocomplete = dao.get_autocomplete(User(email=request.COOKIES.get('useremail')))
-
-        return render(request, 'create.html', {
-            'meeting': meeting,
-            'action': 'update/{}/'.format(id),
-            'autocomplete': autocomplete,
-        })
+        return _edit_meeting_page(
+            request,
+            meeting,
+            meeting_action_update,
+        )
 
 
 def update(request, id):
@@ -132,7 +156,15 @@ def update(request, id):
         if meeting.user.email != request.COOKIES.get('useremail'):
             return redirect('/access_denied')
         with MeetingDao() as dao:
-            dao.update(meeting)
+            try:
+                dao.update(meeting)
+            except DatabaseError:
+                return _edit_meeting_page(
+                    request,
+                    meeting,
+                    meeting_action_update,
+                    error='Failed to update, try again',
+                )
 
         return redirect('/meetings')
 
@@ -154,6 +186,12 @@ def discard(request, id):
     with InvitationDao() as dao:
         dao.discard(id, User(email=request.COOKIES.get('useremail')))
     return redirect('/invitations')
+
+
+def delete_meeting(request, id):
+    with MeetingDao() as dao:
+        dao.delete(id)
+    return redirect('/meetings')
 
 
 def access_denied(request):
